@@ -1,0 +1,92 @@
+body
+{
+	background: transparent;
+	text-align:center;
+	color:white;
+	-webkit-user-select:none;
+}
+.leftcol
+{
+	text-align: right;
+	width: 250px;
+}
+.leftcol
+{
+	text-align: right;
+	width: 250px;
+	padding-right: 5px;
+	padding-bottom: 5px;
+	padding-left: 5px;
+}
+.rightcol
+{
+	text-align: center;
+	width: 200px;
+	
+}
+.darkstyledtextinput
+{
+	background-color: lightgrey;	
+}
+
+.button
+{
+	opacity: 0.85;	
+   	font-family: Helvetica;
+    font-size: 12px;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    text-xow: rgba(0, 0, 0, 0.589844) 0px -1px 0px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    -webkit-dashboard-region: dashboard-region(control rectangle);
+    -webkit-margin-top-collapse: separate;
+    -webkit-margin-bottom-collapse: separate;
+    height: 16px;
+    vertical-align: middle;
+    margin: 5px;
+    padding-top: 2px;
+    border-top-width: 0px; border-right-width: 5px;
+    border-bottom-width: 0px; border-left-width: 5px;
+    -webkit-border-image: url(./images/button.png) 0 5 0 5 repeat stretch;
+    
+}
+
+.darkstyledinput
+{
+	background-color: black;
+	color: rgba(255,255,255,0.8);
+	opacity: 0.8;
+	-webkit-border-top-left-radius: 8px;
+	-webkit-border-bottom-right-radius: 8px;
+}
+#container
+{
+	width: 440px;
+	color: rgba(255,255,255,0.8);
+	background:transparent;
+	opacity:0.9;
+	-webkit-border-radius: 8px;
+	font: 9pt "Lucida Grande", Lucida, Verdana, sans-serif;
+}
+#headder
+{
+	
+	background-color: #333;
+	-webkit-border-top-left-radius: 8px;
+	-webkit-border-top-right-radius: 8px;
+	font-size: 12pt;
+}
+
+#settingssection
+{
+	background-color:black;
+}
+
+#footer
+{
+	background-color: #333;
+	-webkit-border-bottom-left-radius: 8px;
+	-webkit-border-bottom-right-radius: 8px; 
+}

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<link rel="stylesheet" type="text/css" href="settings_page.css"/>
+<head>
+	<title>Settings..</title>
+</head>
+<script type="text/javascript" charset="utf-8">
+	getbyid=function(objectidstring)
+	{
+		return document.getElementById(objectidstring);
+	}
+	cancel_click=function()
+	{
+		Titanium.UI.currentWindow.close();
+	}
+	reset_all_click=function()
+	{
+		var retVal = confirm("Are you sure you want to reset ALL settings ?\n(this requires the application to quit)");
+		if( retVal == true )
+		{
+		window.reset_all_setings()
+		}
+		else
+		{
+			
+		}
+	}
+	window.insert_curent_settings=function(checkinterval,maxnumberofmesages,windowwidth,windowheight,showalloronlynewunread,htmlbodypreviewtype)
+	{
+		getbyid('checkinterval').value=parseInt(checkinterval)
+		getbyid('maxnumberofmesages').value=parseInt(maxnumberofmesages)
+		getbyid('windowwidth').value=parseInt(windowwidth)
+		getbyid('windowheight').value=parseInt(windowheight)
+		getbyid('showalloronlynewunread').checked=showalloronlynewunread
+		getbyid('htmlbodypreviewtype').value=htmlbodypreviewtype
+	}
+	apply_click=function()
+	{
+		window.set_new_settings(
+		getbyid('checkinterval').value,
+		getbyid('maxnumberofmesages').value,
+		getbyid('windowwidth').value,
+		getbyid('windowheight').value,
+		getbyid('showalloronlynewunread').checked,
+		getbyid('htmlbodypreviewtype').value)	
+	}
+</script>
+
+<body onload="">
+<div id="container">
+	<div id="headder">
+		Settings
+	</div>
+	<div id="settingssection">
+		<table border="0" cellspacing="0" cellpadding="0">
+			<col class="leftcol"></col>
+		  	<col></col>
+			<tr>
+				<td class="leftcol">Check Interval (Mins) : </td>
+				<td class="rightcol"><input type="text" value="" id="checkinterval" class="darkstyledtextinput"></td>
+			</tr>
+			<tr>
+				<td class="leftcol">Maximum Number of Messages : </td>
+				<td class="rightcol"><input type="text" value="" id="maxnumberofmesages" class="darkstyledtextinput" ></td>
+			</tr>
+			<tr>
+				<td class="leftcol">Window Width : </td>
+				<td class="rightcol"><input type="text"value="" id="windowwidth" class="darkstyledtextinput" ></td>
+			</tr>
+			<tr>
+				<td class="leftcol">Window Height : </td>
+				<td class="rightcol"><input type="text"value="" id="windowheight" class="darkstyledtextinput" ></td>
+			</tr>
+			<tr>
+				<td class="leftcol">Reset All Settings : </td>
+				<td class="rightcol"><input type="button" value="Reset all.." id="resetall" class="darkstyledinput" onclick="reset_all_click()"></td>
+			</tr>
+			<tr>
+				<td class="leftcol">Show All Unread?:<br>
+					(disable auto dismiss)
+				</td>
+				<td class="rightcol"><input type="checkbox" checked="true" id="showalloronlynewunread" style="width:16px;height:16px" /></td>
+			</tr>
+			<tr>
+				<td class="leftcol">Email Body Preview type : </td>
+				<td class="rightcol">
+					<SELECT id="htmlbodypreviewtype" class="darkstyledinput">
+						<OPTION VALUE="showfullhtml">Show Full HTML Preview</OPTION>
+						<OPTION VALUE="showplainonly">Show Plain Text Only</OPTION>
+						<OPTION VALUE="dontshow">Show Nothing</OPTION>
+					</SELECT>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div id="footer">
+		<div id="name" class="button" onclick="apply_click()">
+			Apply Settings...
+		</div>
+		
+		<div id="name" class="button" onclick="cancel_click()">
+			Cancel
+		</div>
+	</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+	<!-- Flux Header Custom Code Start--><!-- Flux Header Custom Code End-->
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="imap_login.css"/>
+	<title>Imap Server Login</title>
+	<script type="text/javascript" charset="utf-8">
+		text_input_focus=function(this_elem)
+		{
+			if(this_elem.value==this_elem.getAttribute('defaultValue'))
+			{
+				this_elem.value=""
+			}
+			this_elem.className="inputbox enteredValue";
+		}
+		text_input_blur=function(this_elem)
+		{
+			if(this_elem.value=="")
+			{
+				this_elem.value=this_elem.getAttribute('defaultValue')
+				this_elem.className="inputbox defaultValue";
+			}
+		}
+		getbyid=function(objectidstring)
+		{
+			return document.getElementById(objectidstring);
+		}
+		do_login=function()
+		{
+			window.imap_try_to_login(
+				getbyid('imapusername').value,
+				getbyid('imappassword').value,
+				getbyid('imapserver').value,
+				getbyid('imapusessecure').checked,
+				getbyid('imapport').value
+				)
+		}
+		show_window_on_load=function()
+		{
+			//Titanium.Extras.setDraggableRegionHandler(getbyid('centerbox'))
+			getbyid('imapusername').focus()	
+//			getbyid('imapusername').value=""
+//			getbyid('imappassword').value=""
+			Titanium.UI.currentWindow.show();	
+		}
+	</script>		
+</head>
+<body onload="show_window_on_load()">
+	<div id="centerbox" >
+		Username :
+		<div id="usernamediv"><input type="text" name="" onfocus="text_input_focus(this)" onblur="text_input_blur(this)" defaultValue=" ( username ) " value=" ( username ) " class="inputbox defaultValue" id="imapusername" /></div>
+		Password :
+		<div id="passworddiv"><input type="password" name="" value="" class="inputbox" id="imappassword" /></div>
+		Server :
+		<div id="serverdiv"><input type="text" name="" onfocus="text_input_focus(this)" onblur="text_input_blur(this)" defaultValue="imap.gmail.com" value="imap.gmail.com" class="inputbox defaultValue" id="imapserver" /></div>
+		<div id="securediv">Server Uses Security : <input type="checkbox" checked="true" id="imapusessecure" /></div>
+		Server Port :
+		<div id="portdiv"><input type="text" name="" onfocus="text_input_focus(this)" onblur="text_input_blur(this)" defaultValue="993" value="993" class="inputbox defaultValue" id="imapport" /></div>
+		<div id="logindiv"><input type="button" value="Login..." onclick="do_login()" id="loginbutton" /></div>
+	</div>
+</body>
+</html>

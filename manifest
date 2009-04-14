@@ -1,0 +1,24 @@
+#appname:vvvrm mail alerts
+#appid:com.vvvrm.vvvrm_mail_alerts
+#publisher:vvvrm
+#image:V_logo.png
+#url:http://www.vvvrm.com
+#guid:e79fc1d7-3046-404d-a43f-b37380451338
+#desc:A notifier for gmail or other IMAP email inboxes with HTML previews and the ability to mark a message as read immediately
+runtime:0.3
+api:0.3
+tiapp:0.3
+tifilesystem:0.3
+tiplatform:0.3
+tiui:0.3
+javascript:0.3
+tianalytics:0.3
+python:0.3
+ruby:0.3
+tidesktop:0.3
+tigrowl:0.3
+timedia:0.3
+timonkey:0.3
+tinetwork:0.3
+tinotification:0.3
+tiprocess:0.3

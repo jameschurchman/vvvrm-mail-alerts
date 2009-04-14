@@ -1,0 +1,496 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="main.css"/>
+<script type="text/javascript" charset="utf-8">
+var uiwindow = Titanium.UI.currentWindow;
+setup_curent_window=function()
+{
+	uiwindow.setTransparency(0.8)
+	uiwindow.setX(25)
+	uiwindow.setWidth(400)
+	uiwindow.setY(25)
+	uiwindow.setHeight(800)
+	//uiwindow.hide();
+}
+setup_curent_window()
+</script>
+<script type="text/ruby">
+# Set Ruby Load Path for "requiring"" modules
+resources_dir = Titanium.App.appURLToPath("app://index.html")
+resources_dir=resources_dir.split("index.html")[0]
+$LOAD_PATH << resources_dir
+</script>
+<SCRIPT SRC="./check_mail_ruby.rb"TYPE="text/ruby" ></SCRIPT>
+<script type="text/ruby">
+$mailAlertsObject=MailAlertsClass.new
+$checkemail_message_ids_array
+$checkemail_messages_upto_int
+
+def clear_all_displayed_emails()
+	mail_messages_div = document.getElementById("mail_messages_div")
+	mail_messages_div.innerHTML=""
+end
+
+def imap_login(imapusername,imappassword,imapserver,imapusessecure,imapport)
+	$mailAlertsObject.imap_login(imapusername,imappassword,imapserver,imapusessecure,imapport)
+end
+
+def check_for_new_mail()
+	mail_messages_div = document.getElementById("mail_messages_div")
+	if $mailAlertsObject.checkemail()==false then
+		return false
+	end
+	$checkemail_messages_upto_int=0;
+	$checkemail_message_ids_array=$mailAlertsObject.checkemail()
+	$checkemail_message_ids_array.each do |message_id|
+		div_node = document.createElement('div')
+		div_node.id="message_div_#{message_id}"
+		message_id_string="'#{message_id}'" 
+		div_node.innerHTML='
+		<div class="messagecontainer">
+			<div class="messagecontrols">
+				<div class="fieldsdiv">
+					<div id="fromField">from_string</div>
+					<div id="subjectField">subject_string</div>
+				</div>
+				<div class="buttonsdiv">
+					<div class="button msgbutton" onclick="mark_message_as_read_js()">Mark Read</div>
+					<div class="button msgbutton" onclick="mark_message_as_read_js()">Dismiss</div>
+				</div>
+			</div>
+			<div class="iframediv">
+				<iframe class="iframeclass" src="./blank.html">
+			</div>
+		</div>
+		'		
+		mail_messages_div.appendChild(div_node)
+	end
+	insert_details_timeout=setTimeout("fetch_details()",50);
+end
+
+def fetch_details()
+	message_id=$checkemail_message_ids_array[$checkemail_messages_upto_int]
+	$mailAlertsObject.fetch_message_content(message_id)
+	$checkemail_messages_upto_int=$checkemail_messages_upto_int+1
+	if $checkemail_messages_upto_int==$checkemail_message_ids_array.length then
+		$checkemail_messages_upto_int=0
+		resizeiframes_timeout=setTimeout("insert_details()",50);
+	else
+		insert_details_timeout=setTimeout("fetch_details()",50);
+	end
+end
+
+def insert_details()
+	message_id=$checkemail_message_ids_array[$checkemail_messages_upto_int]
+	message_details_dictionary = $mailAlertsObject.return_message_details_and_body(message_id,settingsObject.htmlbodypreviewtype)
+
+#	is_dismissed = fetch_if_message_is_dismissed(message_details_dictionary['UID'])
+	message_from_field = document.querySelector("#message_div_#{message_id} #fromField")
+	message_from_field.lastChild.nodeValue=message_details_dictionary['from']
+
+	message_subject_field = document.querySelector("#message_div_#{message_id} #subjectField")
+	message_subject_field.lastChild.nodeValue=message_details_dictionary['subject']
+
+	message_iframe = document.querySelector("#message_div_#{message_id} .iframeclass")
+	message_iframe.contentWindow.document.body.innerHTML=message_details_dictionary['body']
+	
+	$checkemail_messages_upto_int=$checkemail_messages_upto_int+1
+	if $checkemail_messages_upto_int==$checkemail_message_ids_array.length then
+		$mailAlertsObject.imap_logout()
+		resizeiframes_timeout=setTimeout("resizeiframes()",1000);
+		#setTimeout("clear_all_displayed_emails()",settingsObject['checkinterval']*60*1000);
+		#setTimeout("check_for_new_mail()",settingsObject['checkinterval']*60*1000);
+	else
+		insert_details_timeout=setTimeout("insert_details()",50);
+	end
+end
+
+def mark_read_ruby()
+	return false
+end
+</script>
+<script type="text/javascript" charset="utf-8">
+
+var settingsObject=new Object();
+load_default_settings=function()
+{
+	settingsObject['checkinterval']="5";
+	settingsObject['maxnumberofmesages']="10";
+	settingsObject['windowwidth']="550"
+	settingsObject['windowheight']="800"
+	settingsObject['showalloronlynewunread']="true"
+	settingsObject['htmlbodypreviewtype']="showfullhtml"
+}
+
+var db;
+try
+{
+	if (window.openDatabase)
+	{
+		db = openDatabase("mailalertssettingsdatabase", "1.0", "Storage for mail alerts", 200000);
+		if (!db) alert("Failed to open the database on disk.  This is probably because the version was bad or there is not enough space left");
+	}
+	else alert("Couldn't open the database: Not Supported");
+} catch(err){alert("an error occurred opening the database")}	
+
+init_databases=function()
+{
+    db.transaction(function(tx) {
+        tx.executeSql("SELECT COUNT(*) FROM mailAlertsSettingsDB", [], function(result) {
+            init_dismised_messages_databases();
+        }, function(tx, error) {
+            tx.executeSql("CREATE TABLE mailAlertsSettingsDB (id idString UNIQUE,idString TEXT, paramString TEXT)", [], function(result) { 
+            init_dismised_messages_databases();
+            });
+        });
+    });
+}
+init_dismised_messages_databases=function()
+{
+    db.transaction(function(tx) {
+        tx.executeSql("SELECT COUNT(*) FROM mailAlertsDismissedMessagesDB", [], function(result) {
+            load_settings();
+        }, function(tx, error) {
+            tx.executeSql("CREATE TABLE mailAlertsDismissedMessagesDB (id messageid UNIQUE,messageid TEXT, paramString TEXT)", [], function(result) { 
+            load_settings();
+            });
+        });
+    });	
+}
+reset_all_setings=function()
+{
+	db.transaction(function(tx) {
+        tx.executeSql("DROP TABLE mailAlertsSettingsDB", [], function(tx, result)
+			{
+				reset_all_setings_part_2();
+			}, function(tx, error) {alert('Reset failed with error: ' + error.message);return;
+        });
+    });
+}
+reset_all_setings_part_2=function()
+{
+	db.transaction(function(tx) {
+        tx.executeSql("DROP TABLE mailAlertsDismissedMessagesDB", [], function(tx, result)
+			{
+				prompt_to_quit_app()
+			}, function(tx, error) {alert('Reset failed with error: ' + error.message);return;
+        });
+    });
+}
+load_settings=function()
+{
+    db.transaction(function(tx) {
+        tx.executeSql("SELECT * FROM mailAlertsSettingsDB", [], function(tx, result)
+			{
+ 				for (var i = 0; i < result.rows.length; ++i)
+				{
+					var row = result.rows.item(i);
+					settingsObject[row['idString']]=row['paramString']
+					//alert("idString : "+[row['idString']]+" : "+row['paramString'])
+				}
+			load_dismissed_messages_array()
+        	}, function(tx, error) {
+            alert('Failed to retrieve notes from database - ' + error.message);
+            return;
+        });
+    });
+}
+var dismissed_messages_array=new Array()
+load_dismissed_messages_array=function()
+{
+	uiwindow.setWidth(parseInt(settingsObject['windowwidth']))
+	uiwindow.setHeight(parseInt(settingsObject['windowheight']))
+    db.transaction(function(tx) {
+        tx.executeSql("SELECT * FROM mailAlertsDismissedMessagesDB", [], function(tx, result)
+			{
+ 				for (var i = 0; i < result.rows.length; ++i)
+				{
+					var row = result.rows.item(i);
+					dismissed_messages_array.push(row['messageid'])
+				}
+			login_to_imap()
+        	}, function(tx, error) {
+            alert('Failed to retrieve notes from database - ' + error.message);
+            return;
+        });
+    });
+}
+function resizeiframes()
+{
+	var iframenodes=document.getElementsByTagName("IFRAME")
+	var innerDoc;
+	for (var i=0; i < iframenodes.length; i++)
+	{
+		innerDoc = (iframenodes[i].contentDocument) ? iframenodes[i].contentDocument : iframenodes[i].contentWindow.document; 
+		styleNode = (iframenodes[i].style) ? iframenodes[i].style : frame; 
+		styleNode.height="1px";
+		styleNode.height=innerDoc.body.scrollHeight + 25;
+	}
+}
+var settings_to_store_array_keys=new Array()
+var settings_to_store_array_values=new Array()
+set_setting=function(idString_to_set,paramString_to_set)
+{
+	settingsObject[idString_to_set]=paramString_to_set
+	settings_to_store_array_keys.push(idString_to_set);
+	settings_to_store_array_values.push(paramString_to_set)
+}
+check_if_still_settings_to_store=function()
+{
+	if(settings_to_store_array_values.length>0)
+	{
+		set_setting_do_db_insert(settings_to_store_array_keys.pop(),settings_to_store_array_values.pop());
+	}
+}
+set_setting_do_db_insert=function(idString_to_set,paramString_to_set)
+{
+	db.transaction(function(tx) {
+        tx.executeSql("SELECT * FROM mailAlertsSettingsDB where idString=?", [idString_to_set], function(tx, result)
+			{
+				if(result.rows.length==0)
+				{
+					set_setting_insert_value(idString_to_set,paramString_to_set)
+				}
+				else
+				{
+					set_setting_update_value(idString_to_set,paramString_to_set)
+				}
+        	}, function(tx, error) {alert('Failed with error: ' + error.message);return;
+        });
+    });
+}
+set_setting_insert_value=function(idString_to_set,paramString_to_set)
+{
+	db.transaction(function(tx) {
+        tx.executeSql("INSERT INTO mailAlertsSettingsDB (idString, paramString) VALUES (?, ?)", [idString_to_set,paramString_to_set], function(tx, result)
+			{
+				setTimeout("check_if_still_settings_to_store()",100);
+        	}, function(tx, error) {alert('Insert failed with error: ' + error.message);return;
+        });
+    });
+}
+set_setting_update_value=function(idString_to_set,paramString_to_set)
+{
+	db.transaction(function(tx) {
+        tx.executeSql("UPDATE mailAlertsSettingsDB SET paramString=(?) WHERE idString=(?)", [paramString_to_set,idString_to_set], function(tx, result)
+			{
+				setTimeout("check_if_still_settings_to_store()",100);
+        	}, function(tx, error) {alert('Update failed with error: ' + error.message);return;
+        });
+    });	
+}
+
+return_settings_value=function(idString)
+{
+	if(settingsObject[idString]==undefined)
+	{
+		return false;
+	}
+	else
+	{
+		return settingsObject[idString];
+	}
+}
+imap_try_to_login=function(imapusername,imappassword,imapserver,imapusessecure,imapport)
+{
+	if(imap_login(imapusername,imappassword,imapserver,imapusessecure,imapport)==false)
+	{
+		alert("Sorry the connection failed, please check your login details are Correct, You have selected the security option correctly and on gmail you have enabled IMAP")
+	}
+	else
+	{
+		set_setting('imapusername',imapusername)
+		set_setting('imappassword',imappassword)
+		set_setting('imapserver',imapserver)
+		set_setting('imapusessecure',imapusessecure+"")
+		set_setting('imapport',imapport)
+		login_to_imap()
+		setTimeout("login_window.hide();login_window.close();",500);
+		setTimeout("check_if_still_settings_to_store()",1000);
+	}
+
+}
+login_to_imap=function()
+{
+	if((username=return_settings_value('imapusername')) && (password=return_settings_value('imappassword')))
+	{
+		if(imap_login(settingsObject['imapusername'],settingsObject['imappassword'],settingsObject['imapserver'],true,993)==false)
+		{
+			show_login_window()
+		}
+		else
+		{
+			check_for_new_mail()
+		}
+	}
+	else
+	{
+		show_login_window()
+	}
+}
+var login_window;
+show_login_window=function()
+{
+	login_window = Titanium.UI.createWindow()
+	login_window.setHeight(500);
+	login_window.setWidth(600);
+	login_window.setResizable(false);
+	login_window.setUsingChrome(false)
+	login_window.setURL('app://imap_login.html');
+	login_window.setTransparency(0.7)
+	login_window.open();
+//	login_window.show();
+	add_login_window_callback_timeout=setTimeout("add_login_window_callbackfunctions()",1500);
+}
+add_login_window_callbackfunctions=function()
+{
+	login_window.window.imap_try_to_login=imap_try_to_login
+	login_window.window.reset_all_setings=reset_all_setings
+}
+hide_main_window=function()
+{
+	uiwindow.setWidth(0);
+}
+show_main_window=function()
+{
+	uiwindow.setWidth(500);
+}
+set_new_settings=function(checkinterval,maxnumberofmesages,windowwidth,windowheight,showalloronlynewunread,htmlbodypreviewtype)
+{
+	if(isNaN(checkinterval))
+	{alert("Check Interval must be a number");return;}
+	else
+	{
+		if(parseInt(checkinterval)<1)
+		{alert("Check Interval must not be less than 1 min");return;}
+		else
+		{
+			set_setting('checkinterval',parseInt(checkinterval))
+		}
+	}
+	if(isNaN(maxnumberofmesages))
+	{alert("Maximum Number of Messages must be a number");return;}
+	else
+	{
+		set_setting('maxnumberofmesages',parseInt(maxnumberofmesages))
+	}
+	
+	if(isNaN(windowwidth))
+	{alert("Window Width must be a number");return;}
+	else
+	{
+		if(parseInt(windowwidth)<100 || parseInt(windowwidth)>2000)
+		{alert("Window Width must be in the range 100 to 2000");return;}
+		else
+		{
+			uiwindow.setWidth(parseInt(windowwidth))
+			set_setting('windowwidth',windowwidth+"")
+		}
+	}
+	if(isNaN(windowheight))
+	{alert("Window Height must be a number");return;}
+	else
+	{
+		if(parseInt(windowheight)<100 || parseInt(windowheight)>2000)
+		{alert("Window height must be in the range 100 to 2000");return;}
+		else
+		{
+			uiwindow.setHeight(parseInt(windowheight))
+			set_setting('windowheight',parseInt(windowheight))
+		}
+	}
+	
+	set_setting('htmlbodypreviewtype',htmlbodypreviewtype)
+	
+	setTimeout("check_if_still_settings_to_store()",200);
+	settings_window.close();
+}
+var settings_window;
+show_settings_window=function()
+{
+	settings_window = Titanium.UI.createWindow()
+	settings_window.setHeight(500);
+	settings_window.setWidth(450);
+	settings_window.setResizable(false);
+	settings_window.setUsingChrome(false)
+	settings_window.setURL('app://settings_page.html');
+	settings_window.setTransparency(0.7)
+	settings_window.open();
+//	login_window.show();
+	insert_details_timeout=setTimeout("add_settings_window_callbackfunctions()",300);
+}
+add_settings_window_callbackfunctions=function()
+{
+	settings_window.window.set_new_settings=set_new_settings
+	settings_window.window.reset_all_setings=reset_all_setings
+	settings_window.window.insert_curent_settings(settingsObject['checkinterval'],settingsObject['maxnumberofmesages'],settingsObject['windowwidth'],settingsObject['windowheight'],settingsObject['showalloronlynewunread'],settingsObject['htmlbodypreviewtype'])	
+}
+mark_message_as_read_js=function()
+{
+	alert("due to a bug in titanium you will have to wait for this feature... :-(")
+//	mark_read_ruby()
+}
+
+set_message_id_as_dismissed=function(unique_message_id)
+{
+	db.transaction(function(tx) {
+        tx.executeSql("INSERT INTO mailAlertsDismissedMessagesDB (messageid) VALUES (?)", [unique_message_id], function(tx, result)
+			{
+        	}, function(tx, error) {alert('Dismiss Failed : ' + error.message);return;
+        });
+    });
+}
+fetch_if_message_is_dismissed=function(uid_var)
+{
+return inArray(dismissed_messages_array,uid_var)
+}
+prompt_to_quit_app=function()
+{
+	var exit = confirm("Are you sure you want to quit?");
+	if (exit) Titanium.App.exit();
+}
+dismiss_all_messages=function()
+{
+//	check_for_new_mail()	
+	mark_message_as_read_js()
+}
+inArray=function(thearray,thevalue)
+{
+	for (var i = thearray.length - 1; i >= 0; i--)
+	{
+		if(thearray[i]==thevalue){return true;}
+	}
+	return false;
+}
+generate_iframe_node=function(id_number)
+{
+	var iframe_node = document.createElement('iframe')
+	iframe_node.id="mail_iframe_"+id_number
+	iframe_node.className="iframeclass";
+	iframe_node.src="./blank.html"
+	return iframe_node;
+}
+
+page_loaded=function()
+{
+	load_default_settings()
+	init_databases()
+	//uiwindow.hide();
+}
+</script>
+
+</head>
+	<body onload="page_loaded()">
+		<div class="wrapperdiv">
+			<div class="topbardiv">
+				<div>
+					<img src="./images/closebox.png" class="closebox" onclick="hide_main_window()">	
+					<div class="button topbutton" onclick="show_settings_window()">Settings..</div>
+					<div class="button topbutton" onclick="prompt_to_quit_app()">Quit App..</div>
+					<div class="button topbutton" onclick="dismiss_all_messages()">Dismiss All</div>
+				</div>
+			</div>
+			<div id="mail_messages_div" class="mailMessagesDiv"></div>
+		</div>
+	</body>
+</html>
